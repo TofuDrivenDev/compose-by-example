@@ -1,6 +1,6 @@
 # [Compose by Example](https://tofudrivendev.github.io/compose-by-example/)
 
-[![Deploy Wasm 🌐 ](https://github.com/TofuDrivenDev/compose-by-example/actions/workflows/deploy.yml/badge.svg)](https://github.com/TofuDrivenDev/bank-of-canada-forex/actions/workflows/deploy.yml)
+[![Deploy Wasm 🌐 ](https://github.com/TofuDrivenDev/compose-by-example/actions/workflows/deploy.yml/badge.svg)](https://github.com/TofuDrivenDev/compose-by-example/actions/workflows/deploy.yml)
 
 Compose by Example is an interactive introduction to [Jetpack Compose](https://developer.android.com/develop/ui/compose/components) and [Compose Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/).
 
