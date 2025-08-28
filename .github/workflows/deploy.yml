@@ -1,64 +1,79 @@
-# Workflow for deploying WasmJS App to GitHub Pages
-name: "Deploy Wasm 🌐 "
-run-name: "Triggered by ${{ inputs.commit_hash }}"
+name: "🚀 Deploy Pages"
+run-name: "${{ inputs.ref }} #${{ inputs.commit_hash }}"
+
 
 on:
-  # push:
-  #   branches:
-  #     - main  # Trigger the workflow on pushes to the main branch
-  workflow_dispatch:  # Allow manual triggering
+  workflow_dispatch:
     inputs:
       commit_hash:
         required: false
         type: string
-        
+      ref:
+        required: true
+        type: string
+        default: 'refs/heads/main'
+
 
 permissions:
-  contents: read  # Required to fetch the repository content
-  pages: write    # Allow deployment to GitHub Pages
-  id-token: write # Required by actions/configure-pages
+  contents: read
+  pages: write
+  id-token: write
+
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
-
     steps:
-      # 1. Checkout the repository
-      - name: "✅ Checkout code"
+      - name: "📥 Checkout Code"
         uses: actions/checkout@v4
         with:
           repository: TofuDrivenDev/kmp-monorepo
-          ref: main
+          ref: ${{ inputs.ref }}
           token: ${{ secrets.KMP_MONOREPO_PAT }}
 
-      # 2. Set up JDK 21
-      - name: "⚙️ Set up JDK 21"
+      - name: "⚙️ Setup JDK"
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
-
-      # 3. Set up Gradle
+      
       - name: "⚙️ Setup Gradle"
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.12.1
 
-      # 4. Build the WasmJS App
-      - name: "🛠️ Build WasmJS App"
+      - name: "🛠️ Build Wasm Binaries"
         run: gradle :appComposeByExample:wasmJsBrowserDistribution -DGITHUB_PAT=${{ github.token }}
+        
+      - name: "📋 Move Wasm Binaries"
+        env:
+          WASM_FROM: ./appComposeByExample/build/dist/wasmJs/productionExecutable
+          WASM_TO: ./appComposeByExample/web/public/wasm
+        run: |
+          rm -rf ${{ env.WASM_TO }}
+          mkdir -p ${{ env.WASM_TO }}
+          cp ${{ env.WASM_FROM }}/*.js \
+             ${{ env.WASM_FROM }}/*.js.map \
+             ${{ env.WASM_FROM }}/*.wasm \
+             ${{ env.WASM_TO }}
 
-      # 5. Set up GitHub Pages
-      - name: "📄 Configure GitHub Pages"
+      - name: "⚙️ Setup NPM"
+        working-directory: ./appComposeByExample/web
+        run: npm ci
+
+      - name: "🛠️ Build Next.js App"
+        working-directory: ./appComposeByExample/web
+        run: npm run build
+
+      - name: "⚙️ Setup Pages"
         uses: actions/configure-pages@v5
 
-      # 6. Upload the built artifact to Pages
-      - name: "📤 Upload GitHub Pages artifact"
+      - name: "📤 Upload Artifact to Pages"
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./appComposeByExample/build/dist/wasmJs/productionExecutable
+          path: ./appComposeByExample/web/out
 
-      # 7. Deploy to GitHub Pages
-      - name: "🚀 Deploy to GitHub Pages"
+      - name: "🚀 Deploy Pages"
         id: deployment
         uses: actions/deploy-pages@v4
+        
